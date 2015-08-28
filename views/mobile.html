@@ -1,0 +1,225 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<style type="text/css">
+		body{
+			margin:0px;
+			font-family: "Helvetica Neue", Helvetica, Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif;
+		}
+		.wrap{
+		  min-height: 100%;
+		  height: auto !important;
+		  height: 100%;
+		  margin: 0 auto;
+		  background: #ebebeb;
+		}
+		.video-js{
+			background-color: #000;
+		}
+		.control-list{
+			background-color: #ebebeb;
+			border-bottom: 1px solid #dbdbdb;
+			height : 38px;
+		}
+		.control-list a{
+			width: 33.3%;
+			float: left;
+			display: block;
+			text-align: center;
+			color: #ccc;
+			text-decoration: none;
+			font-size: 15px;
+			height: 36px;
+			line-height: 36px;
+		}
+		a.active {
+			color: #000;
+			border-bottom: 2px solid #dbdbdb;
+		}
+		.send-box{
+			position: absolute;
+			bottom: 0px;
+			background-color: #f6f4f4;
+			width: 100%;
+			height: 8%;
+			border-top: 1px solid #dbdbdb;
+			border-bottom: 1px solid #dbdbdb;
+		}
+		.input{
+			position: absolute;
+			border-radius: 5px;
+			width: 60%;
+			height: 80%;
+			line-height: 80%;
+			vertical-align: middle; 
+			background-color:#fff;
+			border: 1px solid #dbdbdb;
+			top: 10%;
+			left: 5%;
+			box-shadow: none;
+		}
+		.btn{
+			position: absolute;
+			border-radius: 5px;
+			width: 25%;
+			height: 80%;
+			line-height: 80%;
+			vertical-align: middle; 
+			background-color:#fff;
+			border: 1px solid #dbdbdb;
+			text-align: center;
+			top: 10%;
+			right: 5%;
+			box-shadow: none;
+			font-family: "Helvetica Neue", Helvetica, Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif;
+			font-size: 15px;
+			color: #999;					
+		}
+		.messages{
+			padding: 5px;
+			overflow-x: hidden;
+			overflow-y: scroll;	
+		}
+		.detail-box{
+			background-color: #fff;
+			margin: 5px;
+			border-radius: 2px;
+			border: 1px solid #dbdbdb;
+			padding: 10px;
+		}
+		.detail-header{
+			font-weight: bold;
+			border-bottom: 1px dashed #dbdbdb;
+		}
+		.detail-body{
+			margin-top: 10px;
+			font-size: 12px;
+		}
+		</style>
+		
+		<script src="./public/js/jquery.js"></script>
+		<script src="./public/js/video.dev.js"></script>
+		<script src="socket.io.js"></script>
+		<script type="text/javascript">
+            $(window).ready(render);
+            $(window).load(render);
+            //为修正 ipad中 video标签尺寸的自动重绘不正确 的错误
+            $(window).resize(render);		
+			function render() {
+				var wrapWidth = $(window).width();
+				var wrapHeight = $(window).height();
+				var videoHeight = wrapHeight * (2/5);
+
+				$(".video video").css({
+					"height": videoHeight + "px",
+					"width" : wrapWidth + "px"
+				});
+			}
+		</script>
+	</head>
+	<body>
+		<div class="wrap">
+			<div class="video">
+				<div class="video-js-box">
+                     <video id="example_video_1" class="video-js" webkit-playsinline="" width="320" height="240" controls="" autoplay="" preload="auto">
+				<source src="http://live.vgame.tv/live/test/playlist.m3u8" type='video/mp4' />
+                    </video>					
+				</div>
+			</div>
+			<div class="control-list">
+				<a class="active" href="#" id="control_1">互动聊天</a>
+				<a href="#" id="control_2">项目介绍</a>
+				<a href="#" id="control_3">投资人介绍</a>
+			</div>
+			<div class="panel" id="panel_1">
+				<div class="messages">
+				</div>				
+				<div class="send-box">
+					<input class="input" type="text" id="sendBox">
+					<button class="btn" id="sendBtn">发&nbsp;&nbsp;送</button>
+				</div>
+			</div>
+			<div class="panel" style="display:none">
+				<div class="detail-box">
+					<div class="detail-header">滴滴打车：</div>
+					<div class="detail-body">很不错的项目</div>
+				</div>
+			</div>	
+			<div class="panel" style="display:none">
+				<div class="detail-box">
+					<div class="detail-header">马云：</div>
+					<div class="detail-body">非常有钱</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+	<script type="text/javascript">
+		var role = 'starter';//or ='starter'
+		var username = '<%-user.nickname %>';
+		var echuang;
+
+		function appendMessage(username, role, message){
+			if(role=='investor'){
+				var str = '<div class="message">' + 
+							'<span class="username">' + username + '（投资人）</span>' + '&nbsp:&nbsp' +
+							'<span>' + message + '</span>' +
+						'</div>';
+			} else {
+				var str = '<div class="message">' + 
+							'<span class="username">' + username + '</span>' + '&nbsp:&nbsp' +
+							'<span>' + message + '</span>' +
+						'</div>';				
+			}
+			$('.messages').append(str);
+			$('.messages').scrollTop($('.messages')[0].scrollHeight);
+		}
+
+		function appendNotify(message){
+			var str = '<div class="message">' + 
+							'<span>' + message + '</span>' +
+						'</div>';
+
+			$('.messages').append(str);
+			//$('.messages').scrollTop($('.messages')[0].scrollHeight);						
+		}
+
+		$('#sendBtn').click(function(){
+			appendMessage(username, role, $('#sendBox').val());
+			echuang.emit('message',{username:username,role:role,message:$('#sendBox').val()});
+			$('#sendBox').val('');
+		});
+
+		$('.control-list').on('click', 'a', function (){
+			var index = $(this).index();
+			$('.control-list a').removeClass("active");
+			$(this).addClass("active");
+			$('.panel:eq(0)').hide();
+			$('.panel:eq(1)').hide();
+			$('.panel:eq(2)').hide();
+			$('.panel:eq(' + index + ')').show();
+		});
+
+		$(document).ready(function(){
+			$('.messages').height($(window).height()*2/5);
+
+			echuang = io.connect('http://112.124.117.146:2399/echuang');
+
+			echuang.on('connect', function () {
+				echuang.emit('join', {username:username, role:role});
+			})
+
+			echuang.on('join_push', function (data) {
+				$('.investorCount').text(data.investorCount);
+				$('.starterCount').text(data.starterCount);
+			});
+
+			echuang.on('message', function (data) {
+				appendMessage(data.username, data.role, data.message);
+			})
+
+			appendNotify('欢迎' + username + '加入房间！');
+		})
+	</script>
+</html>
